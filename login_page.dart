@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_application_1/screens/new_patient.dart';
 
 class login_page extends StatefulWidget {
   const login_page({super.key});
@@ -25,6 +26,9 @@ class _login_pageState extends State<login_page> {
     _emailcontroller.dispose();
     _passwordcontroller.dispose();
 
+  }
+  void open_form (){
+    Navigator.of(context).pushReplacementNamed('sing_up');
   }
   @override
   Widget build(BuildContext context) {
@@ -148,21 +152,25 @@ class _login_pageState extends State<login_page> {
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Container(
-              padding: EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Color.fromRGBO(60, 138, 214, 100),
-                borderRadius: BorderRadius.circular(20)
-              ),
-
-              child: Center(child: Text("Je m'inscris",
-              style: TextStyle(
-                color: Colors.black,
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-
-              ),)),
+            child: GestureDetector(
+              onTap: open_form,
+              child: Container(
+                padding: EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Color.fromRGBO(60, 138, 214, 100),
+                  borderRadius: BorderRadius.circular(20)
+                ),
               
+                child: Center(child: Text("Je m'inscris",
+                
+                style: TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+              
+                ),)),
+                
+              ),
             ),
           ),
 
