@@ -1,6 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:fl_chart/fl_chart.dart';  // For the chart
+import 'package:fl_chart/fl_chart.dart'; // For the chart
 import 'package:flutter_application_1/screens/rendezvous.dart';
 import 'package:flutter_application_1/screens/traitement.dart';
 import 'dart:math'; // For generating random values
@@ -17,8 +17,9 @@ class _AuthPatientState extends State<AuthPatient> {
   final user = FirebaseAuth.instance.currentUser!;
 
   List<double> generateBloodPressureData(String uid, int dataPoints) {
-    final random = Random(uid.hashCode); 
-    return List.generate(dataPoints, (index) => 120 + random.nextInt(20).toDouble());
+    final random = Random(uid.hashCode);
+    return List.generate(
+        dataPoints, (index) => 120 + random.nextInt(20).toDouble());
   }
 
   late List<double> dailyBloodPressure;
@@ -31,10 +32,14 @@ class _AuthPatientState extends State<AuthPatient> {
   @override
   void initState() {
     super.initState();
-    dailyBloodPressure = generateBloodPressureData(user.uid, 24); // 24 points for hours
-    weeklyBloodPressure = generateBloodPressureData(user.uid + "week", 7); // 7 points for days
-    monthlyBloodPressure = generateBloodPressureData(user.uid + "month", 12); // 12 points for months
-    yearlyBloodPressure = generateBloodPressureData(user.uid + "year", 5); // 5 points for years
+    dailyBloodPressure =
+        generateBloodPressureData(user.uid, 24); // 24 points for hours
+    weeklyBloodPressure =
+        generateBloodPressureData(user.uid + "week", 7); // 7 points for days
+    monthlyBloodPressure =
+        generateBloodPressureData(user.uid + "month", 12); // 12 points for months
+    yearlyBloodPressure =
+        generateBloodPressureData(user.uid + "year", 5); // 5 points for years
   }
 
   void _signOut() {
@@ -59,21 +64,48 @@ class _AuthPatientState extends State<AuthPatient> {
     final now = DateTime.now();
     switch (selectedView) {
       case 'Semaine':
-        return List.generate(7, (index) {
-          DateTime day = now.subtract(Duration(days: 6 - index));
-          return DateFormat('EEEE', 'fr_FR').format(day); // Returns full name of the day in French
-        });
+        return [
+          'Lundi',
+          'Mardi',
+          'Mercredi',
+          'Jeudi',
+          'Vendredi',
+          'Samedi',
+          'Dimanche',
+        ];
+
       case 'Mois':
-        return List.generate(12, (index) {
-          DateTime month = DateTime(now.year, index + 1);
-          return DateFormat('MMMM', 'fr_FR').format(month); // Returns full name of the month in French
-        }).sublist(0, now.month); // Show months up to the current month
+        return [
+          'Janvier',
+          'Février',
+          'Mars',
+          'Avril',
+          'Mai',
+          'Juin',
+          'Juillet',
+          'Août',
+          'Septembre',
+          'Octobre',
+          'Novembre',
+          'Décembre',
+        ].sublist(0, now.month); // Show only months up to the current month
+
       case 'Année':
         return List.generate(5, (index) {
-          return (now.year - (4 - index)).toString(); // Show last 5 years
-        });
+          return (now.year - index).toString(); // Get last 5 years
+        }).toSet().toList(); // Convert to Set to remove duplicates
+
       default: // 'Jour'
-        return List.generate(24, (index) => '${index}:00'); // 24-hour format
+        return [
+          '00:00',
+          '03:00',
+          '06:00',
+          '09:00',
+          '12:00',
+          '15:00',
+          '18:00',
+          '21:00',
+        ];
     }
   }
 
@@ -210,14 +242,20 @@ class _AuthPatientState extends State<AuthPatient> {
                               reservedSize: 40,
                               getTitlesWidget: (value, meta) {
                                 return Text(
-                                  value.toString(),
+                                  value.toInt().toString(),
                                   style: TextStyle(
-                                    color: Colors.black,
                                     fontSize: 12,
+                                    color: Colors.black,
                                   ),
                                 );
                               },
                             ),
+                          ),
+                          rightTitles: AxisTitles(
+                            sideTitles: SideTitles(showTitles: false), // No right Y-axis
+                          ),
+                          topTitles: AxisTitles(
+                            sideTitles: SideTitles(showTitles: false), // No top X-axis
                           ),
                           bottomTitles: AxisTitles(
                             sideTitles: SideTitles(
@@ -225,45 +263,60 @@ class _AuthPatientState extends State<AuthPatient> {
                               reservedSize: 40,
                               getTitlesWidget: (value, meta) {
                                 final xLabels = getXLabels();
-                                if (value.toInt() < xLabels.length) {
+                                final totalDataPoints =
+                                    getCurrentBloodPressureData().length;
+
+                                // Calculate step to evenly space the labels across the x-axis
+                                int step = (totalDataPoints / xLabels.length)
+                                    .ceil(); // Adjust step based on number of labels
+
+                                final index = value.toInt();
+
+                                // Show a label only if the index is a multiple of the step
+                                if (index % step == 0 &&
+                                    index ~/ step < xLabels.length) {
                                   return Text(
-                                    xLabels[value.toInt()],
+                                    xLabels[index ~/ step], // Get the corresponding label
                                     style: TextStyle(
-                                      color: Colors.black,
                                       fontSize: 12,
+                                      color: Colors.black,
                                     ),
                                   );
                                 }
-                                return Container();
+                                return Container(); // Return empty for indices without labels
                               },
                             ),
-                          ),
-                          topTitles: AxisTitles(
-                            sideTitles: SideTitles(showTitles: false),
-                          ),
-                          rightTitles: AxisTitles(
-                            sideTitles: SideTitles(showTitles: false),
                           ),
                         ),
                         borderData: FlBorderData(
                           show: true,
                           border: Border(
-                            bottom: BorderSide(color: Colors.grey.shade300),
-                            left: BorderSide(color: Colors.grey.shade300),
+                            bottom: BorderSide(color: Colors.black, width: 1),
+                            left: BorderSide(color: Colors.black, width: 1),
+                            right: BorderSide(
+                                color: Colors.transparent, width: 0), // No right border
+                            top: BorderSide(
+                                color: Colors.transparent, width: 0), // No top border
                           ),
                         ),
+                        minX: 0,
+                        maxX: getCurrentBloodPressureData().length.toDouble() - 1,
+                        minY: 100,
+                        maxY: 140,
                         lineBarsData: [
                           LineChartBarData(
-                            spots: getCurrentBloodPressureData().asMap().entries.map((entry) {
-                              return FlSpot(entry.key.toDouble(), entry.value);
-                            }).toList(),
+                            spots: getCurrentBloodPressureData()
+                                .asMap()
+                                .entries
+                                .map((e) => FlSpot(e.key.toDouble(), e.value))
+                                .toList(),
                             isCurved: true,
                             color: Color.fromRGBO(60, 138, 214, 1),
                             barWidth: 4,
                             belowBarData: BarAreaData(
-                              show: true,
-                              color: Color.fromRGBO(60, 138, 214, 0.3),
-                            ),
+                                show: true,
+                                color: Color.fromRGBO(60, 138, 214, 1)
+                                    .withOpacity(0.3)),
                           ),
                         ],
                       ),
@@ -272,10 +325,11 @@ class _AuthPatientState extends State<AuthPatient> {
                 ],
               ),
             ),
+            
           ],
         ),
       ),
-      bottomNavigationBar: BottomAppBar(
+       bottomNavigationBar: BottomAppBar(
         child: Container(
           padding: EdgeInsets.symmetric(horizontal: 16),
           height: 60,
@@ -314,7 +368,7 @@ class _AuthPatientState extends State<AuthPatient> {
             ],
           ),
         ),
-      ),
+       ),
     );
   }
 }
